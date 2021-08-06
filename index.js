@@ -15,22 +15,19 @@ function draw() {
             return point
         }
 
-        carrot = (ctx) => {
-            let carrotCoords = new Int8Array(2)
+        textCursor = (ctx) => {
+            let textCursorCoords = new Int8Array(2)
 
             return {
-                updateState: () => {
-
-                },
                 draw: () => {
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(carrotCoords[0], carrotCoords[1], carrotWidth, carrotHeight);
+                    ctx.fillStyle = fontColor;
+                    ctx.fillRect(textCursorCoords[0], textCursorCoords[1], textCursorWidth, textCursorHeight);
                 },
-                setCarrotCoords: (x, y) => {
-                    carrotCoords = createPoint(x, y)
+                setTextCursorCoords: (x, y) => {
+                    textCursorCoords = createPoint(x, y)
                 },
-                getCarrotCoords: () => {
-                    return carrotCoords
+                getTextCursorCoords: () => {
+                    return textCursorCoords
                 }
             }
         }
@@ -39,7 +36,6 @@ function draw() {
             let textWithCoords = []
 
             return {
-                updateState: () => { },
                 draw: () => {
                     ctx.fillStyle = `${fontColor}`;
                     for (let i = 0; i < textWithCoords.length; i += 3) {
@@ -64,22 +60,23 @@ function draw() {
             }
         }
 
-        const nonCharacterKeys = ['Backspace', 'Enter', 'Alt', 'AltGraph', 'Shift']
+        const nonCharacterKeys = ['Backspace', 'Enter', 'Alt', 'AltGraph', 'Shift', 'Escape', 'Delete', 'F1', 'F2', 'F3', 'F6', 'F7', 'F8', 'F9', 'F10', 'F12', 'ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft']
 
         let fontSize = 25
         let fontStyle = 'Fira Code'
         let fontColor = 'lightgreen'
         ctx.font = `${fontSize}px ${fontStyle}`
-        let carrotWidth = fontSize/2
-        let carrotHeight = fontSize
-        let theCarrot = carrot(ctx)
+        let textCursorWidth = fontSize/2
+        let textCursorHeight = fontSize
+        let theTextCursor = textCursor(ctx)
         let theDocText = text(ctx)
         let frameNumber = 1
         let blink = 1
 
         canvas.addEventListener('mousedown', event => {
             if (event.button === 0) {
-                theCarrot.setCarrotCoords(event.offsetX, event.offsetY)
+                theTextCursor.setTextCursorCoords(event.offsetX, event.offsetY)
+                // thetextCursor.textCursorCoords = createPoint(event.offsetX, event.offsetY)
                 blink = 1
             }
         })
@@ -87,17 +84,17 @@ function draw() {
         window.addEventListener("keydown", event => {
             // event.preventDefault()
             let keyPressed = event.key
-            console.log(keyPressed)
-            let theCarrotCoords = theCarrot.getCarrotCoords()
+            // console.log(keyPressed)
+            let theTextCursorCoords = theTextCursor.getTextCursorCoords()
             if (nonCharacterKeys.includes(keyPressed)) {
                 if (keyPressed === 'Backspace') {
                     theDocText.backSpacePressed()
-                    theCarrot.setCarrotCoords(theCarrotCoords[0] - fontSize, theCarrotCoords[1])
+                    theTextCursor.settextCursorCoords(theTextCursorCoords[0] - fontSize, theTextCursorCoords[1])
                 }
             }
             else {
-                theDocText.addCharacterInTextWithCoords(keyPressed, theCarrotCoords[0], theCarrotCoords[1] + carrotHeight)
-                theCarrot.setCarrotCoords(theCarrotCoords[0] + fontSize, theCarrotCoords[1])
+                theDocText.addCharacterInTextWithCoords(keyPressed, theTextCursorCoords[0], theTextCursorCoords[1] + textCursorHeight)
+                theTextCursor.settextCursorCoords(theTextCursorCoords[0] + fontSize, theTextCursorCoords[1])
             }
         });
 
@@ -110,8 +107,9 @@ function draw() {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             theDocText.draw()
+
             if (blink <= 30) {
-                theCarrot.draw()
+                theTextCursor.draw()
             }
 
             if (blink === 60) {
@@ -128,3 +126,4 @@ function draw() {
         main()
     }
 }
+
