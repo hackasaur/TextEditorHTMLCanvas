@@ -1,4 +1,5 @@
 canvas {
-    border: 3px solid goldenrod;
-    border-radius: 10px;    
+    border: 1px solid goldenrod;
+    /* border-radius: 5px;     */
+    /* font-kerning: none; */
 }
