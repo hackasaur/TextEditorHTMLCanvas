@@ -16,35 +16,7 @@ function draw() {
 		}
 
 		//function factories for elements of the text editor:
-		const createLine = (ctx, initialCoords, lineHeight) => {
-			const properties = { coords: initialCoords, width: 100, height: lineHeight }
-
-			return {
-				getCoords: () => {
-					return properties.coords
-				},
-				setCoords: (point) => {
-					properties.coords = point
-				},
-				getProperties: () => {
-					return properties
-				},
-				setProperties: (props) => {
-					properties = props
-				},
-				drawBoundary: () => {
-					let coords = properties.coords
-					// ctx.lineJoin = 'round';
-					ctx.lineWidth = 1;
-					ctx.strokeStyle = 'white'
-					ctx.strokeRect(coords[0], coords[1], properties.width, properties.height)
-				}
-
-			}
-		}
-
 		const createTextCursor = (ctx, initialCoords, width, height, color) => {
-
 			const properties = { coords: initialCoords, color, width, height }
 
 			return {
@@ -61,78 +33,136 @@ function draw() {
 			}
 		}
 
-		const createDocText = (ctx, fontStyle, fontSize, fontColor) => {
-			const properties = { textWithCoords: [], style: fontStyle, size: fontSize, color: fontColor }
+		const createLine = (ctx, initialCoords, initialFont) => {
+			const font = {
+				fontSize: initialFont.fontSize,
+				fontStyle: initialFont.fontStyle,
+				fontColor: initialFont.fontColor
+			}
+			const fontWithPosition = [0, font]
+			const properties = {
+				coords: initialCoords,
+				height: ctx.measureText('').fontBoundingBoxAscent,
+				text: '',
+				fontWithPosition: fontWithPosition,
+				characterWidths: []
+			}
 
 			return {
-				draw: () => {
-					ctx.font = `${properties.size}px ${properties.style}`
-					ctx.fillStyle = `${properties.color}`;
-					let textWithCoords = properties.textWithCoords
-					for (let i = 0; i < textWithCoords.length; i += 3) {
-						ctx.fillText(textWithCoords[i], textWithCoords[i + 1], textWithCoords[i + 2])
-					}
-					// ctx.fillText('Hello World', 100, 100)
-					// console.log(textWithcoords)
+				getCoords: () => {
+					return properties.coords
 				},
-				addCharacterWithCoords: (character, x, y) => {
-					properties.textWithCoords.push(character, x, y)
+				setCoords: (coords) => {
+					properties.coords = coords
 				},
-				backSpacePressed: () => {
-					let textWithCoords = properties.textWithCoords
-					let l = textWithCoords.length
-					if (l < 4) {
-						if (l > 0) {
-							textWithCoords.splice(0, 3)
-						}
+				getProperties: () => {
+					return properties
+				},
+				setProperties: (props) => {
+					properties = props
+				},
+				addCharacter: (character, font = 'same') => {
+					properties.text = properties.text.concat(character)
+					if (font !== 'same') {
+						fontWithPosition.push(font, properties.length - 1)
 					}
-					else {
-						textWithCoords.splice(textWithCoords.length - 3, 3)
+					properties.characterWidths.push(ctx.measureText(character).width)
+				},
+				drawBoundary: () => {
+					let coords = properties.coords
+					// ctx.lineJoin = 'round';
+					ctx.lineWidth = 1;
+					ctx.strokeStyle = 'white'
+					let width
+					for (let characterWidth of properties.characterWidths) {
+						width += characterWidth
 					}
+					ctx.strokeRect(coords[0], coords[1], width, properties.height)
+				},
+				getCharacterWidths: () => {
+					return properties.characterWidths
 				}
 			}
 		}
 
-		function renderEditor(text, textCursor) {
-			ctx.fillStyle = '#2c0b88' //lighter purple background color
+		const createDocText = (ctx, initialCoords, initialFont) => {
+			const properties = {
+				lines: [createLine(ctx, initialCoords, initialFont)],
+				currentLineIndex: 0
+			}
+			// ctx.textBaseline = 'bottom';
+
+			return {
+				draw: () => {
+					ctx.fillStyle = `${properties.color}`;
+					for (let line of properties.lines) {
+						line.drawBoundary()
+						let lineProps = line.getProperties()
+						// console.log('lineProps', lineProps)
+						for (let i = 0; i < lineProps.fontWithPosition.length; i += 2) {
+							let font = lineProps.fontWithPosition[i + 1]
+							ctx.fillStyle = `${font.fontColor}`;
+							ctx.font = `${font.fontSize}px ${font.fontStyle}`
+							if (!lineProps.fontWithPosition[i + 2]) {
+								ctx.fillText(lineProps.text.slice(i), lineProps.coords[0], lineProps.coords[1] + lineProps.height)
+							}
+							else {
+								ctx.fillText(lineProps.text.slice(i, i + 2), lineProps.coords[0], lineProps.coords[1] + lineProps.height)
+							}
+						}
+					}
+				},
+				addCharacterInLine: (character, font) => {
+					properties.lines[properties.currentLineIndex].addCharacter(character, font)
+				},
+				backSpacePressed: () => {
+					let line = properties.lines[properties.currentLineIndex].getProperties().text
+					properties.lines[properties.currentLineIndex].getProperties().text = line.slice(0, line.length - 1)
+					properties.lines[properties.currentLineIndex].getProperties().characterWidths.pop()
+				},
+				addNewLine: (coords, initialFont) => {
+					properties.lines.push(createLine(ctx, coords, initialFont))
+					properties.currentLineIndex = properties.lines.length - 1
+				},
+				getProperties: () => {
+					return properties
+				}
+			}
+		}
+
+		function renderEditor(ctx, docText, textCursor) {
+			ctx.fillStyle = '#3a2081' //lighter purple background color
 			ctx.fillRect(0, 0, canvas.width, canvas.height)
-			text.draw()
-			let textCursorcoords = textCursor.getCoords()
-			behindTheCursor = ctx.getImageData(textCursorcoords[0], textCursorcoords[1], textCursorWidth + 1, textCursorHeight);
+			docText.draw()
+			let textCursorCoords = textCursor.getCoords()
+			behindTheCursor = ctx.getImageData(textCursorCoords[0], textCursorCoords[1], textCursorWidth + 1, textCursorHeight);
 		}
 
 		const nonCharacterKeys = ['Backspace', 'Enter', 'Alt', 'AltGraph', 'Shift', 'Escape', 'Delete', 'F1', 'F2', 'F3', 'F6', 'F7', 'F8', 'F9', 'F10', 'F12', 'ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft']
 
 		//configs:
-
 		//font
-		let fontSize = 25
-		let fontStyle = 'Fira Code'
-		let fontColor = 'lightgreen'
-		ctx.font = `${fontSize}px ${fontStyle}`
-		//text cursor
-		let textCursorWidth = fontSize / 2
-		let textCursorHeight = fontSize
-		//line
-		let lineHeight = ctx.measureText('|').fontBoundingBoxAscent
+		let font = { fontSize: 25, fontStyle: 'Fira Code', fontColor: 'lightgreen' }
 
-		//global variables
+		//text cursor
+		let textCursorWidth = font.fontSize/8
+		let textCursorHeight = font.fontSize
+
+		//global variables:
 		let frameNumber = 1
 		let blinkCycleFrame = 1
 		let behindTheCursor
-
-		//editor's elements
-		let theTextCursor = createTextCursor(ctx, createPoint(0, 0), textCursorWidth, textCursorHeight, fontColor)
-		let theDocText = createDocText(ctx, fontStyle, fontSize, fontColor)
-		let theLine = createLine(ctx, createPoint(0, 0), lineHeight)
+		//editor's elements:
+		let theTextCursor = createTextCursor(ctx, createPoint(0, 0), textCursorWidth, textCursorHeight, font.fontColor)
+		let theDocText = createDocText(ctx, createPoint(0, 0), font)
 
 		canvas.addEventListener('mousedown', event => {
 			if (event.button === 0) {
 				let mouseCoords = createPoint(event.offsetX, event.offsetY)
 				theTextCursor.setCoords(mouseCoords)
-				// thetextCursor.textCursorcoords = createPoint(event.offsetX, event.offsetY)
+				theDocText.addNewLine(mouseCoords, font)
+				renderEditor(ctx, theDocText, theTextCursor)
 				blinkCycleFrame = 1
-				renderEditor(theDocText, theTextCursor)
 			}
 		})
 
@@ -140,29 +170,35 @@ function draw() {
 			// event.preventDefault()
 			let keyPressed = event.key
 			// console.log(keyPressed)
-			let theTextCursorcoords = theTextCursor.getCoords()
+			let theTextCursorCoords = theTextCursor.getCoords()
 			if (nonCharacterKeys.includes(keyPressed)) {
 				if (keyPressed === 'Backspace') {
-					theDocText.backSpacePressed()
-					theTextCursor.setCoords(createPoint(theTextCursorcoords[0] - fontSize, theTextCursorcoords[1]))
+					theDocTextProps = theDocText.getProperties()
+					let lineProps = theDocTextProps.lines[theDocTextProps.currentLineIndex].getProperties()
+					if (lineProps.text.length > 0) {
+						let characterWidth = lineProps.characterWidths[lineProps.text.length - 1]
+						theTextCursor.setCoords(createPoint(theTextCursorCoords[0] - characterWidth, theTextCursorCoords[1]))
+						theDocText.backSpacePressed()
+					}
 				}
-				else if (keyPressed === 'Enter') {
-					theDocText.addCharacterWithCoords('', theTextCursorcoords[0], theTextCursorcoords[1] + textCursorHeight)
-				}
+				// else if (keyPressed === 'Enter') {
 			}
 			else {
-				theDocText.addCharacterWithCoords(keyPressed, theTextCursorcoords[0], theTextCursorcoords[1] + textCursorHeight)
-				theTextCursor.setCoords(createPoint(theTextCursorcoords[0] + fontSize, theTextCursorcoords[1]))
+				theDocText.addCharacterInLine(keyPressed, 'same')
+				theDocTextProps = theDocText.getProperties()
+				let lineProps = theDocTextProps.lines[theDocTextProps.currentLineIndex].getProperties()
+				let characterWidth = lineProps.characterWidths[lineProps.text.length - 1]
+				theTextCursor.setCoords(createPoint(theTextCursorCoords[0] + characterWidth, theTextCursorCoords[1]))
 			}
 
 			blinkCycleFrame = 1
-			renderEditor(theDocText, theTextCursor)
+			renderEditor(ctx, theDocText, theTextCursor)
 		});
 
 		//rendering part:
 
-		//render first time
-		renderEditor(theDocText, theTextCursor)
+		//render the first time
+		renderEditor(ctx, theDocText, theTextCursor)
 
 		function main() {
 			if (frameNumber <= 5000) {
@@ -173,9 +209,9 @@ function draw() {
 				theTextCursor.draw()
 			}
 			else if (blinkCycleFrame === 30) {
-				let theTextCursorcoords = theTextCursor.getCoords()
-				//this way the whole background, text will not be rendered everytime it'll just render the area behind the cursor for blinking
-				ctx.putImageData(behindTheCursor, theTextCursorcoords[0], theTextCursorcoords[1])
+				let theTextCursorCoords = theTextCursor.getCoords()
+				//this way the whole background,text will not be rendered everytime for blinking...it'll just render the area behind the cursor
+				ctx.putImageData(behindTheCursor, theTextCursorCoords[0], theTextCursorCoords[1])
 			}
 			else if (blinkCycleFrame === 60) {
 				blinkCycleFrame = 0

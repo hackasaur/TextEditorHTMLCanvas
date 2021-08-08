@@ -6,9 +6,18 @@
 - change text cursor shape
 - auto-indent
 - indent based folding
+- split window
+- find regex
+- character-level text formatting
 
 # bugs
 - Control is typed out sometimes?
+    - cannot reproduce
+- [x] character drops below when backspaced [fixed]
+    -  changed textWithCoords.length - 3 instead of -4
+- [x] text appears above text cursor
+    - fillText draw above the y coordinate, so had to add lineHeight to the y
+- [ ] cursor shit more thn the character width 
 
 # features
 - have vim key bindings
@@ -16,6 +25,8 @@
 - draw mode
 - minimalistic and easy to customize
 
-
+# notes
 start typing text from text cursor's current position 
 
+fontObject
+{fontSize, fontStyle, fontColor}
