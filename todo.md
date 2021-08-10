@@ -9,6 +9,8 @@
 - split window
 - find regex
 - character-level text formatting
+- undo/redo
+- cursor width and height
 
 # bugs
 - Control is typed out sometimes?
@@ -24,9 +26,12 @@
 - freestyle mouse highlight text 
 - draw mode
 - minimalistic and easy to customize
+- design for touchscreen devices
 
 # notes
 start typing text from text cursor's current position 
 
 fontObject
 {fontSize, fontStyle, fontColor}
+
+fontChanged? should check whether font is same to previous in the line.addCharacter()?
