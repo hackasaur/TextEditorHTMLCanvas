@@ -19,7 +19,9 @@
     -  changed textWithCoords.length - 3 instead of -4
 - [x] text appears above text cursor
     - fillText draw above the y coordinate, so had to add lineHeight to the y
-- [ ] cursor shit more thn the character width 
+- [x] cursor shifts more than the character width 
+- [x] cursor does not align with text vertically when font size is changed
+    - fixed by adding the difference of previous height of cursor and new height to y coord of the cursor
 
 # features
 - have vim key bindings
@@ -27,6 +29,7 @@
 - draw mode
 - minimalistic and easy to customize
 - design for touchscreen devices
+- timelapse code
 
 # notes
 start typing text from text cursor's current position 
