@@ -13,15 +13,18 @@
 - cursor width and height
 
 # bugs
+*open*
 - Control is typed out sometimes?
     - cannot reproduce
-- [x] character drops below when backspaced [fixed]
-    -  changed textWithCoords.length - 3 instead of -4
-- [x] text appears above text cursor
-    - fillText draw above the y coordinate, so had to add lineHeight to the y
+
+*fixed*
 - [x] cursor shifts more than the character width 
 - [x] cursor does not align with text vertically when font size is changed
     - fixed by adding the difference of previous height of cursor and new height to y coord of the cursor
+- [x] character drops below when backspaced
+    -  changed textWithCoords.length - 3 instead of -4
+- [x] text appears above text cursor
+    - fillText draws above the y coordinate, so had to add lineHeight to the y
 
 # features
 - have vim key bindings

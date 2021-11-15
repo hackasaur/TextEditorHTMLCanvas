@@ -1,2 +1,2 @@
 # code editor made using html canvas(**incomplete**)
-making a code editor only using html canvas. work is in progress.
+making a text editor only using html canvas. work is in progress.
