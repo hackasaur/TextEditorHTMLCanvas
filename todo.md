@@ -1,7 +1,10 @@
 # todo
+- [ ] add all the properties in return part of the function factories
+    - so that instead of making a props object using .getProperties() you can write cursor.properties.coords which is more consistent
+- [ ] enter should work
+- text highlighting and copy-pasting
 - textCursorWidth should be calculated from font
 - text should be in a grid
-- enter should work
 - text highlighting and copy-paste should be possible
 - change text cursor shape
 - auto-indent
@@ -16,6 +19,7 @@
 *open*
 - Control is typed out sometimes?
     - cannot reproduce
+- combinations like ctrl + a-zA-Z types out the letter. should not type anything
 
 *fixed*
 - [x] cursor shifts more than the character width 

@@ -9,13 +9,6 @@ export const setCanvasFont = (ctx, font) => {
     ctx.font = `${font.size}px ${font.font}`
 }
 
-export const getFontHeight = (ctx) => {
-    return ctx.measureText('l').fontBoundingBoxAscent
-}
-
-export const getCharacterWidth = (ctx, character) => {
-    return ctx.measureText(character).width
-}
 
 export const isPointInsideBox = (point, topLeftCoords, bottomRightCoords) => {
             return (
@@ -24,7 +17,6 @@ export const isPointInsideBox = (point, topLeftCoords, bottomRightCoords) => {
                 point[1] >= topLeftCoords[1] && 
                 point[1] <= bottomRightCoords[1])
         }
-
 
 export const isPointInsideBox2 = (point, topLeftCoords, width, height) => {
             return (
