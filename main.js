@@ -23,7 +23,7 @@ function main() {
 			let imageDataBehindTheCursor
 
 			return {
-				properties,
+				properties: properties,
 				draw: () => {
 					if (blinkFrameNumber === 0) {
 						ctx.fillStyle = properties.color;
@@ -59,7 +59,7 @@ function main() {
 			// fontWithPosition element should be of the form {start:0, font: font}
 			const properties = {
 				coords: coords,
-				height: ctx.measureText('').fontBoundingBoxAscent,
+				height: ctx.measureText(' ').fontBoundingBoxAscent,
 				text: '',
 				fontsWithPosition: [],
 				characterWidths: []
@@ -84,14 +84,16 @@ function main() {
 
 				drawBoundary: () => {
 					let coords = properties.coords
-					// ctx.lineJoin = 'round';
+					ctx.lineJoin = 'bevel';
 					ctx.lineWidth = 1;
 					ctx.strokeStyle = 'white'
 					let width = 0
 					for (let characterWidth of properties.characterWidths) {
 						width += characterWidth
 					}
-					ctx.strokeRect(coords[0], coords[1], width, properties.height)
+					ctx.strokeRect(coords[0], coords[1] - properties.height, width, properties.height)
+					ctx.fillStyle = 'red'
+					ctx.fillRect(coords[0], coords[1], 3, 3)
 				},
 				getCharacterWidths: () => {
 					return properties.characterWidths
@@ -99,9 +101,9 @@ function main() {
 			}
 		}
 
-		const createDocText = (ctx, initialCoords) => {
+		const createDocText = (ctx, coords) => {
 			const properties = {
-				lines: [createLine(ctx, initialCoords)],
+				lines: [createLine(ctx, coords)],
 				currentLineIndex: 0
 			}
 			// ctx.textBaseline = 'bottom';
@@ -110,7 +112,7 @@ function main() {
 				properties,
 				draw: () => {
 					for (let line of properties.lines) {
-						// line.drawBoundary()
+						line.drawBoundary()
 						let fontsWithPosition = line.properties.fontsWithPosition
 						let txt = line.properties.text
 						for (let i = 0; i < fontsWithPosition.length; i++) {
@@ -125,10 +127,10 @@ function main() {
 							let font = fontsWithPosition[i].font
 							canvasTools.setCanvasFont(ctx, font)
 							if (i === (fontsWithPosition.length - 1)) { //slice till end of txt for last element of fontsWithPos
-								ctx.fillText(txt.slice(fontsWithPosition[i].start), line.properties.coords[0] + offsetInX, line.properties.coords[1] + line.properties.height)
+								ctx.fillText(txt.slice(fontsWithPosition[i].start), line.properties.coords[0] + offsetInX, line.properties.coords[1]) //+ line.properties.height
 							}
 							else {
-								ctx.fillText(txt.slice(fontsWithPosition[i].start, fontsWithPosition[i + 1].start), line.properties.coords[0] + offsetInX, line.properties.coords[1] + line.properties.height)
+								ctx.fillText(txt.slice(fontsWithPosition[i].start, fontsWithPosition[i + 1].start), line.properties.coords[0] + offsetInX, line.properties.coords[1] ) //+ line.properties.height
 							}
 						}
 					}
@@ -143,6 +145,8 @@ function main() {
 					properties.lines[currentLineIndex].properties.characterWidths.pop()
 				},
 				addNewLine: (coords) => {
+					// if(coords[1] - fontTools.getFontHeight(ctx) )
+					coords[1] += fontTools.getFontHeight(ctx)
 					properties.lines.push(createLine(ctx, coords))
 				}
 			}
@@ -153,7 +157,12 @@ function main() {
 			docText.draw()
 			textCursor.resetBlinkCycle()
 			textCursor.setImageDataBehindTheCursor()
+
+			// for (let line of docText.properties.lines) {
+			// 	console.log(line.properties)
+			// }
 		}
+
 
 		function startEditor(ctx) {
 			//define font using the html font-dropdowns 
@@ -171,9 +180,8 @@ function main() {
 
 			canvas.addEventListener('mousedown', event => {
 				if (event.button === 0) {
-					let mouseCoords = canvasTools.createPoint(event.offsetX, event.offsetY)
-					theTextCursor.properties.coords = mouseCoords
-					theDocText.addNewLine(mouseCoords, font)
+					theTextCursor.properties.coords = canvasTools.createPoint(event.offsetX, event.offsetY)
+					theDocText.addNewLine(canvasTools.createPoint(event.offsetX, event.offsetY))
 					renderEditor(ctx, theDocText, theTextCursor)
 				}
 			})
@@ -195,15 +203,15 @@ function main() {
 						}
 					}
 					else if (keyPressed === 'Enter') {
-						for (let line of theDocText.properties.lines) {
-							console.log(line.properties)
-						}
+						let line = theDocText.properties.lines[theDocText.properties.lines.length - 1]
+						let newLineCoords = canvasTools.createPoint(0, line.properties.coords[1] + fontTools.getFontHeight(ctx))
+						theTextCursor.properties.coords = newLineCoords
+						theDocText.addNewLine(newLineCoords)
 					}
 				}
 				//when a character key is pressed
 				else {
-					//if space is pressed
-					if (keyPressed === ' ') {
+					if (keyPressed === ' ') {//spacebar
 						event.preventDefault()
 					}
 					theDocText.addCharacterInLine(keyPressed, font)
@@ -211,8 +219,8 @@ function main() {
 					let characterWidth = line.properties.characterWidths[line.properties.text.length - 1]
 
 					theTextCursor.properties.coords = (
-						canvasTools.createPoint(theTextCursor.properties.coords[0] + characterWidth,
-							theTextCursor.properties.coords[1]))
+						canvasTools.createPoint(theTextCursor.properties.coords[0] + characterWidth, theTextCursor.properties.coords[1])
+					)
 				}
 
 				renderEditor(ctx, theDocText, theTextCursor)
@@ -222,6 +230,7 @@ function main() {
 				font.font = document.getElementById('font-dropdown-style').value
 				font.color = document.getElementById('font-dropdown-color').value
 				font.size = document.getElementById('font-dropdown-size').value
+				console.log(theDocText.properties)
 				canvasTools.setCanvasFont(ctx, font)
 				theTextCursor.updateCursor()
 				renderEditor(ctx, theDocText, theTextCursor)

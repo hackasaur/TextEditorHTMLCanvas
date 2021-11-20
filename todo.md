@@ -1,6 +1,6 @@
 # todo
 - [ ] add all the properties in return part of the function factories
-    - so that instead of making a props object using .getProperties() you can write cursor.properties.coords which is more consistent
+    - so that instead of making a props object using .getProperties() you can write cursor.properties.coords which i guess is more consistent
 - [ ] enter should work
 - text highlighting and copy-pasting
 - textCursorWidth should be calculated from font
@@ -14,14 +14,18 @@
 - character-level text formatting
 - undo/redo
 - cursor width and height
+- make a measuring tool to measure pixels for debugging
 
 # bugs
 *open*
 - Control is typed out sometimes?
     - cannot reproduce
 - combinations like ctrl + a-zA-Z types out the letter. should not type anything
-- text cursor length increases/decreases from the bottom instead of top when changing font size 
-- textCursor blinking leaves a line behind
+- [x] line's y coord goes up/down when changing font just after clicking a new line 
+    - mouseCoords reference was passed to both cursor and line coords so line coords changed with cursor's
+- [ ] textCursor blinking leaves a line behind
+- [ ] can type even though dropdown is in focus
+
 
 *fixed*
 - [x] cursor shifts more than the character width 

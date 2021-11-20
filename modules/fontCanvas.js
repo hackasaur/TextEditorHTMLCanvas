@@ -8,7 +8,7 @@ export const areFontsSame = (font1, font2) => {
 }
 
 export const getFontHeight = (ctx) => {
-    return ctx.measureText('l').fontBoundingBoxAscent
+    return ctx.measureText(' ').fontBoundingBoxAscent
 }
 
 export const getCharacterWidth = (ctx, character) => {
