@@ -1,8 +1,8 @@
 export const areFontsSame = (font1, font2) => {
     let sameFont = (
-        font1.fontColor === font2.fontColor
-        && font1.fontStyle === font2.fontStyle
-        && font1.fontSize === font2.fontSize
+        font1.color === font2.color
+        && font1.style === font2.style
+        && font1.size === font2.size
     )
     return sameFont
 }

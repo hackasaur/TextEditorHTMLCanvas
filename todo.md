@@ -20,6 +20,8 @@
 - Control is typed out sometimes?
     - cannot reproduce
 - combinations like ctrl + a-zA-Z types out the letter. should not type anything
+- text cursor length increases/decreases from the bottom instead of top when changing font size 
+- textCursor blinking leaves a line behind
 
 *fixed*
 - [x] cursor shifts more than the character width 

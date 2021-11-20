@@ -1,7 +1,6 @@
 import * as canvasTools from './modules/canvas tools.js';
 import * as fontTools from './modules/fontCanvas.js'
 
-
 const nonCharacterKeys = ['Backspace', 'Enter', 'Alt', 'AltGraph', 'Shift', 'Escape', 'Delete', 'F1', 'F2', 'F3', 'F6', 'F7', 'F8',
 	'F9', 'F10', 'F12', 'ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft']
 
@@ -13,35 +12,37 @@ function main() {
 		ctx.canvas.height = window.innerHeight;
 
 		//function factories for elements of the text editor:
-		const createTextCursor = (ctx, initialCoords) => {
+		const createTextCursor = (ctx, coords) => {
 			const properties = {
-				coords: initialCoords,
+				coords: coords,
 				color: ctx.fillStyle,
 				width: ctx.measureText(' ').width / 4,
 				height: ctx.measureText(' ').fontBoundingBoxAscent, //height of font
 			}
-			let blinkCycle = 0
+			let blinkFrameNumber = 0
 			let imageDataBehindTheCursor
 
 			return {
 				properties,
 				draw: () => {
-					if (blinkCycle === 0) {
+					if (blinkFrameNumber === 0) {
 						ctx.fillStyle = properties.color;
 						ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height);
 					}
-					else if (blinkCycle === 30) {
+					else if (blinkFrameNumber === 30) {
 						//this way the whole background with text will not be rendered everytime for blinking...it'll just render the area behind the cursor
 						ctx.putImageData(imageDataBehindTheCursor, properties.coords[0], properties.coords[1])
 					}
-					else if (blinkCycle === 60) {
-						blinkCycle = -1
+					else if (blinkFrameNumber === 60) {
+						blinkFrameNumber = -1
 					}
-					blinkCycle++
+					blinkFrameNumber++
 				},
 				updateCursor: () => {
+					let currentHeight = properties.height
 					properties.height = ctx.measureText(' ').fontBoundingBoxAscent
-					properties.coords[1] = properties.coords[1] + properties.height - newHeight
+					let heightShift = currentHeight - properties.height
+					properties.coords[1] = properties.coords[1] + heightShift
 					properties.width = ctx.measureText(' ').width / 4
 					properties.color = ctx.fillStyle
 				},
@@ -49,7 +50,7 @@ function main() {
 					imageDataBehindTheCursor = ctx.getImageData(properties.coords[0], properties.coords[1], properties.width + 1, properties.height);
 				},
 				resetBlinkCycle: () => {
-					blinkCycle = 0
+					blinkFrameNumber = 0
 				}
 			}
 		}
@@ -133,16 +134,16 @@ function main() {
 					}
 				},
 				addCharacterInLine: (character, font) => {
-					properties.lines[properties.currentLineIndex].addCharacter(character, font)
+					properties.lines[properties.lines.length - 1].addCharacter(character, font)
 				},
 				backSpacePressed: () => {
-					let line = properties.lines[properties.currentLineIndex].properties.text
-					properties.lines[properties.currentLineIndex].properties.text = line.slice(0, line.length - 1)
-					properties.lines[properties.currentLineIndex].properties.characterWidths.pop()
+					let currentLineIndex = properties.lines.length - 1
+					let line = properties.lines[currentLineIndex].properties.text
+					properties.lines[currentLineIndex].properties.text = line.slice(0, line.length - 1)
+					properties.lines[currentLineIndex].properties.characterWidths.pop()
 				},
 				addNewLine: (coords) => {
 					properties.lines.push(createLine(ctx, coords))
-					properties.currentLineIndex = properties.lines.length - 1
 				}
 			}
 		}
@@ -154,8 +155,8 @@ function main() {
 			textCursor.setImageDataBehindTheCursor()
 		}
 
-		function startEditor() {
-			//configs:
+		function startEditor(ctx) {
+			//define font using the html font-dropdowns 
 			let font = {
 				size: document.getElementById('font-dropdown-size').value,
 				font: document.getElementById('font-dropdown-style').value,
@@ -165,14 +166,12 @@ function main() {
 
 			let fontDropdowns = document.getElementById('font-dropdowns')
 
-			//editor's elements:
 			let theTextCursor = createTextCursor(ctx, canvasTools.createPoint(0, 0))
 			let theDocText = createDocText(ctx, canvasTools.createPoint(0, 0), font)
 
 			canvas.addEventListener('mousedown', event => {
 				if (event.button === 0) {
 					let mouseCoords = canvasTools.createPoint(event.offsetX, event.offsetY)
-					// theTextCursor.getProperties().coords = mouseCoords
 					theTextCursor.properties.coords = mouseCoords
 					theDocText.addNewLine(mouseCoords, font)
 					renderEditor(ctx, theDocText, theTextCursor)
@@ -180,13 +179,12 @@ function main() {
 			})
 
 			window.addEventListener("keydown", event => {
-				// event.preventDefault()
 				let keyPressed = event.key
-				// console.log(keyPressed)
+				// console.log(event.code)
 				if (nonCharacterKeys.includes(keyPressed)) {
 					if (keyPressed === 'Backspace') {
-						//move cursor back by 1 char
-						let line = theDocText.properties.lines[theDocText.properties.currentLineIndex]
+						//move cursor back2 char
+						let line = theDocText.properties.lines[theDocText.properties.lines.length - 1]
 						if (line.properties.text.length > 0) {
 							let characterWidth = line.properties.characterWidths[line.properties.text.length - 1]
 							theTextCursor.properties.coords = (
@@ -196,22 +194,27 @@ function main() {
 							theDocText.backSpacePressed()
 						}
 					}
-					// else if (keyPressed === 'Enter') {
+					else if (keyPressed === 'Enter') {
+						for (let line of theDocText.properties.lines) {
+							console.log(line.properties)
+						}
+					}
 				}
+				//when a character key is pressed
 				else {
 					//if space is pressed
 					if (keyPressed === ' ') {
 						event.preventDefault()
 					}
 					theDocText.addCharacterInLine(keyPressed, font)
-					let line = theDocText.properties.lines[theDocText.properties.currentLineIndex]
+					let line = theDocText.properties.lines[theDocText.properties.lines.length - 1]
 					let characterWidth = line.properties.characterWidths[line.properties.text.length - 1]
+
 					theTextCursor.properties.coords = (
 						canvasTools.createPoint(theTextCursor.properties.coords[0] + characterWidth,
 							theTextCursor.properties.coords[1]))
 				}
 
-				// for (line of theDocText.properties.lines)
 				renderEditor(ctx, theDocText, theTextCursor)
 			});
 
@@ -228,7 +231,6 @@ function main() {
 
 			//render the first time
 			renderEditor(ctx, theDocText, theTextCursor)
-
 			// let frameNumber = 1
 
 			//loop for text cursor:
@@ -243,7 +245,7 @@ function main() {
 			loop()
 		}
 
-		startEditor()
+		startEditor(ctx)
 	}
 }
 
