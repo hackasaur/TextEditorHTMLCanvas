@@ -3,3 +3,10 @@ canvas {
     border-radius: 5px;  */
     /* font-kerning: none; */
 }
+
+span, p{
+    color:white
+}
+.dropdown {
+    border-radius:3px
+}
