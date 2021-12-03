@@ -9,8 +9,8 @@ function main() {
 	if (canvas.getContext) {
 
 		const ctx = canvas.getContext('2d')
-		ctx.canvas.width = window.innerWidth / 2;
-		ctx.canvas.height = window.innerHeight;
+		ctx.canvas.width = window.innerWidth - 30 ;
+		ctx.canvas.height = window.innerHeight - 60;
 
 		//function factories for elements of the text editor:
 		const createTextCursor = (ctx, coords) => {
